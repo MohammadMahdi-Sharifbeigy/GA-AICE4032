@@ -1,0 +1,976 @@
+\documentclass[12pt,a4paper]{article}
+
+% Load packages BEFORE xepersian
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+
+% Listings package with custom setup
+\usepackage{listings}
+
+% XePersian setup for RTL/LTR support - MUST BE LOADED LAST
+\usepackage{xepersian}
+\settextfont[Scale=1.0]{IRANSans}
+\setlatintextfont[Scale=1.0]{Times New Roman}
+\DefaultMathsDigits
+
+% Page setup
+\geometry{
+	top=2.5cm,
+	bottom=2.5cm,
+	left=2.5cm,
+	right=2.5cm
+}
+
+% Colors
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{sectioncolor}{rgb}{0.2,0.4,0.6}
+
+% Special environment for LTR code blocks
+\newenvironment{ltrcode}{\lr\bgroup}{\egroup}
+
+% Code styling with forced LTR
+\lstdefinestyle{pythonstyle}{
+	backgroundcolor=\color{backcolour},   
+	commentstyle=\color{codegreen},
+	keywordstyle=\color{magenta},
+	numberstyle=\tiny\color{codegray},
+	stringstyle=\color{codepurple},
+	basicstyle=\footnotesize\ttfamily,
+	breakatwhitespace=false,         
+	breaklines=true,                 
+	captionpos=b,                    
+	keepspaces=true,                 
+	numbers=left,                    
+	numbersep=5pt,                  
+	showspaces=false,                
+	showstringspaces=false,
+	showtabs=false,                  
+	tabsize=2,
+	frame=single,
+	rulecolor=\color{black},
+	upquote=true,
+	columns=fullflexible
+}
+
+\lstset{style=pythonstyle}
+
+% Custom command for Python code with LTR direction
+\newcommand{\pythoncode}[2][]{%
+	\begin{ltrcode}%
+		\lstinputlisting[language=Python,#1]{#2}%
+	\end{ltrcode}%
+}
+
+% Header and footer
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\lr{Genetic Algorithm for Equation Solving}}
+\fancyhead[L]{حل‌کننده ژنتیک سیستم معادلات}
+\fancyfoot[C]{\thepage}
+
+% Section styling
+\titleformat{\section}
+{\color{sectioncolor}\Large\bfseries}
+{\thesection}{1em}{}
+
+\titleformat{\subsection}
+{\color{sectioncolor}\large\bfseries}
+{\thesubsection}{1em}{}
+
+% Hyperlink setup
+\hypersetup{
+	colorlinks=true,
+	linkcolor=blue,
+	filecolor=magenta,      
+	urlcolor=cyan,
+	pdfpagemode=FullScreen,
+	unicode=true,
+	pdfencoding=auto
+}
+
+% Document title
+\title{\Huge\bfseries راهنمای کامل حل‌کننده ژنتیک سیستم معادلات\\
+	\vspace{0.5cm}
+	\Large\lr{Complete Guide to Genetic Algorithm Equation Solver}}
+
+\author{مستندات فنی الگوریتم ژنتیک}
+\date{\today}
+
+\begin{document}
+	
+	\maketitle
+	
+	\tableofcontents
+	\newpage
+	
+	\section{مقدمه}
+	
+	این مستند راهنمای کاملی برای درک و استفاده از حل‌کننده ژنتیک سیستم معادلات ارائه می‌دهد. این سیستم قادر به حل انواع مختلف معادلات خطی و غیرخطی با استفاده از الگوریتم ژنتیک پیشرفته است.
+	
+	\subsection{ویژگی‌های کلیدی}
+	\begin{itemize}
+		\item حل سیستم‌های معادلات خطی و غیرخطی
+		\item استفاده از استراتژی‌های متنوع جهش و ترکیب
+		\item پشتیبانی از تابع شایستگی تطبیقی
+		\item قابلیت راه‌اندازی مجدد خودکار
+		\item تبدیل اعداد اعشاری به کسرهای دقیق
+	\end{itemize}
+	
+	\section{تابع شایستگی}
+	
+	\subsection{چرا از این تابع شایستگی استفاده شد؟}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=تابع شایستگی اصلی]
+			def fitness_function(self, chromosome, equations):
+			total_error = 0
+			for eq in equations:
+			try:
+			result = eq(*chromosome)
+			total_error += result**2  # خطای مربعی
+			except:
+			total_error += 1e6
+			
+			if total_error < 1e-15:
+			return float('inf')
+			
+			return 1.0 / total_error
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\subsection{دلایل انتخاب این روش:}
+	
+	\subsubsection{استفاده از خطای مربعی (\lr{\texttt{result**2}})}
+	\begin{itemize}
+		\item \textbf{دلیل}: خطاهای بزرگ بیشتر تنبیه می‌شوند
+		\item \textbf{مزیت}: همگرایی سریع‌تر به جواب دقیق
+		\item \textbf{مثال}: اگر دو کروموزوم خطاهای 0.1 و 0.01 داشته باشند:
+		\begin{itemize}
+			\item روش خطی: 0.1 vs 0.01 (تفاوت 10 برابری)
+			\item روش مربعی: 0.01 vs 0.0001 (تفاوت 100 برابری)
+		\end{itemize}
+	\end{itemize}
+	
+	\subsubsection{معکوس خطا (\lr{\texttt{1.0 / total\_error}})}
+	\begin{itemize}
+		\item \textbf{دلیل}: تبدیل مسئله minimization به maximization
+		\item \textbf{مزیت}: الگوریتم ژنتیک معمولاً برای بیشینه‌سازی طراحی شده
+		\item \textbf{نتیجه}: خطای کمتر = شایستگی بیشتر
+	\end{itemize}
+	
+	\subsubsection{مدیریت استثناء}
+	\begin{itemize}
+		\item \textbf{جریمه سنگین} (\lr{\texttt{1e6}}) برای کروموزوم‌های نامعتبر
+		\item \textbf{جلوگیری} از تقسیم بر صفر، سرریز عددی، و خطاهای محاسباتی
+	\end{itemize}
+	
+	\subsubsection{تشخیص جواب دقیق}
+	\begin{itemize}
+		\item اگر خطا کمتر از \lr{\texttt{1e-15}} باشد، شایستگی \lr{\texttt{inf}} می‌شود
+		\item \textbf{نتیجه}: توقف زودهنگام در صورت یافتن جواب دقیق
+	\end{itemize}
+	
+	\section{روش‌های جایگزین تابع شایستگی}
+	
+	\subsection{روش خطای خطی (\lr{Linear Error})}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=تابع شایستگی خطی]
+			def linear_fitness(self, chromosome, equations):
+			total_error = 0
+			for eq in equations:
+			total_error += abs(eq(*chromosome))
+			return 1.0 / (1.0 + total_error)
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item ساده‌تر در پیاده‌سازی
+		\item حساسیت کمتر به نویز
+		\item پایداری عددی بهتر
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item همگرایی کندتر
+		\item تمایز کمتر بین جواب‌های خوب و عالی
+		\item ممکن است در جواب‌های تقریبی گیر کند
+	\end{itemize}
+	
+	\subsection{روش خطای لگاریتمی (\lr{Logarithmic Error})}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=تابع شایستگی لگاریتمی]
+			def log_fitness(self, chromosome, equations):
+			total_error = 0
+			for eq in equations:
+			error = abs(eq(*chromosome))
+			if error > 0:
+			total_error += math.log(1 + error)
+			return 1.0 / (1.0 + total_error)
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item کاهش اثر خطاهای بزرگ
+		\item تعادل بهتر بین دقت و پایداری
+		\item مناسب برای مسائل با مقیاس‌های مختلف
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item پیچیدگی محاسباتی بیشتر
+		\item ممکن است دقت نهایی کمتری داشته باشد
+		\item نیاز به تنظیم پارامترهای اضافی
+	\end{itemize}
+	
+	\subsection{روش وزن‌دار (\lr{Weighted Error})}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=تابع شایستگی وزن‌دار]
+			def weighted_fitness(self, chromosome, equations, weights=None):
+			if weights is None:
+			weights = [1.0] * len(equations)
+			
+			total_error = 0
+			for eq, weight in zip(equations, weights):
+			error = eq(*chromosome)
+			total_error += weight * (error ** 2)
+			
+			return 1.0 / (1.0 + total_error)
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item امکان اولویت‌بندی معادلات مختلف
+		\item انعطاف‌پذیری بالا
+		\item کنترل بهتر بر فرآیند همگرایی
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item نیاز به تعیین وزن‌های مناسب
+		\item پیچیدگی بیشتر در تنظیم
+		\item ممکن است به برخی معادلات بی‌توجهی کند
+	\end{itemize}
+	
+	\subsection{روش نرمالایز شده (\lr{Normalized Error})}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=تابع شایستگی نرمالایز شده]
+			def normalized_fitness(self, chromosome, equations):
+			errors = []
+			for eq in equations:
+			errors.append(abs(eq(*chromosome)))
+			
+			# نرمالایز بر اساس میانگین و انحراف معیار
+			mean_error = sum(errors) / len(errors)
+			if mean_error == 0:
+			return float('inf')
+			
+			normalized_error = sum(e / mean_error for e in errors)
+			return 1.0 / (1.0 + normalized_error)
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item تعادل بهتر بین معادلات مختلف
+		\item کاهش اثر معادلات با مقیاس بزرگ
+		\item عملکرد یکنواخت‌تر
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item محاسبات اضافی برای نرمالایز
+		\item ممکن است اطلاعاتی از دست برود
+		\item پیچیدگی در پیاده‌سازی
+	\end{itemize}
+	
+	\subsection{روش تطبیقی (\lr{Adaptive Fitness})}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=تابع شایستگی تطبیقی]
+			def adaptive_fitness(self, chromosome, equations, generation):
+			total_error = 0
+			
+			# ضریب تطبیقی بر اساس نسل
+			adaptive_power = 2.0 + (generation / 1000.0)
+			
+			for eq in equations:
+			error = abs(eq(*chromosome))
+			total_error += error ** adaptive_power
+			
+			return 1.0 / (1.0 + total_error)
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item تطبیق خودکار با پیشرفت الگوریتم
+		\item شروع با جستجوی گسترده، ادامه با جستجوی دقیق
+		\item بهینه‌سازی مراحل مختلف حل
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item پیچیدگی زیاد
+		\item نیاز به تنظیم پارامترهای بیشتر
+		\item ممکن است پیش‌بینی‌ناپذیر باشد
+	\end{itemize}
+	
+	\subsection{روش ترکیبی چندگانه (\lr{Multi-Objective})}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=تابع شایستگی چندهدفه]
+			def multi_objective_fitness(self, chromosome, equations):
+			# هدف 1: کمینه‌سازی خطا
+			total_error = sum(eq(*chromosome)**2 for eq in equations)
+			
+			# هدف 2: سادگی جواب (ترجیح اعداد کوچک)
+			complexity = sum(abs(x) for x in chromosome)
+			
+			# هدف 3: تعداد کسرهای ساده
+			fraction_score = sum(1 for x in chromosome 
+			if abs(x - round(x*4)/4) < 1e-3)
+			
+			# ترکیب وزن‌دار
+			fitness = (1.0 / (1 + total_error)) * 0.7 + \
+			(1.0 / (1 + complexity)) * 0.2 + \
+			fraction_score * 0.1
+			
+			return fitness
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item در نظر گیری چندین معیار همزمان
+		\item تولید جواب‌های عملی‌تر
+		\item انعطاف‌پذیری بسیار بالا
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item پیچیدگی زیاد در طراحی و تنظیم
+		\item ممکن است همگرایی آهسته‌تر داشته باشد
+		\item نیاز به دانش تخصصی برای تنظیم وزن‌ها
+	\end{itemize}
+	
+	\section{جمع‌بندی تابع شایستگی}
+	
+	\subsection{چرا روش فعلی (خطای مربعی معکوس) بهترین انتخاب است؟}
+	
+	\begin{enumerate}
+		\item \textbf{سادگی و کارایی}: پیاده‌سازی ساده با عملکرد عالی
+		\item \textbf{همگرایی سریع}: خطاهای بزرگ شدیداً تنبیه می‌شوند
+		\item \textbf{دقت بالا}: قادر به یافتن جواب‌های بسیار دقیق
+		\item \textbf{پایداری}: مدیریت مناسب حالات استثنایی
+	\end{enumerate}
+	
+	\subsection{کی از روش‌های دیگر استفاده کنیم؟}
+	
+	\begin{itemize}
+		\item \textbf{خطای خطی}: برای مسائل حساس به نویز
+		\item \textbf{وزن‌دار}: وقتی برخی معادلات اهمیت بیشتری دارند
+		\item \textbf{نرمالایز}: برای معادلات با مقیاس‌های مختلف
+		\item \textbf{تطبیقی}: برای مسائل خیلی پیچیده
+		\item \textbf{چندهدفه}: وقتی کیفیت جواب اهمیت دارد
+	\end{itemize}
+	
+	این انتخاب بستگی به نوع مسئله، دقت مورد نیاز، و منابع محاسباتی در دسترس دارد.
+	
+	\section{عوامل مؤثر در الگوریتم ژنتیک}
+	
+	\subsection{فهرست عوامل به ترتیب اولویت}
+	
+	\begin{enumerate}
+		\item روش انتخاب (\lr{Selection Strategy})
+		\item عملگر ترکیب (\lr{Crossover Operator})
+		\item استراتژی جهش (\lr{Mutation Strategy})
+		\item مدیریت جمعیت (\lr{Population Management})
+		\item پارامترهای کنترلی (\lr{Control Parameters})
+		\item نحوه ایجاد جمعیت اولیه (\lr{Initialization Strategy})
+		\item معیارهای توقف (\lr{Termination Criteria})
+	\end{enumerate}
+	
+	\subsection{روش انتخاب (\lr{Selection Strategy})}
+	
+	\subsubsection{تأثیر: \textbf{بالا} (اولویت 1)}
+	\textbf{دلیل}: تعیین‌کننده نحوه انتشار ژن‌های خوب در جمعیت
+	
+	\subsubsection{روش استفاده شده در کد:}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=Tournament Selection]
+			def selection(self, ranked_population):
+			tournament = random.sample(ranked_population, self.tournament_size)
+			if random.random() < 0.9:
+			return max(tournament, key=lambda x: x[1])[0]
+			else:
+			sorted_tournament = sorted(tournament, key=lambda x: x[1], reverse=True)
+			return sorted_tournament[1][0] if len(sorted_tournament) > 1 else sorted_tournament[0][0]
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{نوع}: Tournament Selection با اندازه 5
+	
+	\subsubsection{روش‌های جایگزین:}
+	
+	\paragraph{1.1. Roulette Wheel Selection}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=Roulette Wheel Selection]
+			def roulette_wheel_selection(self, ranked_population):
+			total_fitness = sum(fitness for _, fitness in ranked_population)
+			pick = random.uniform(0, total_fitness)
+			current = 0
+			for chromosome, fitness in ranked_population:
+			current += fitness
+			if current > pick:
+			return chromosome
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item احتمال انتخاب متناسب با شایستگی
+		\item حفظ تنوع بهتر
+		\item پیاده‌سازی ساده
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item حساس به scaling مقادیر شایستگی
+		\item ممکن است افراد ضعیف زیاد انتخاب شوند
+		\item مشکل با شایستگی‌های منفی
+	\end{itemize}
+	
+	\paragraph{1.2. Rank-Based Selection}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=Rank-Based Selection]
+			def rank_selection(self, ranked_population):
+			n = len(ranked_population)
+			# اختصاص rank به جای استفاده از مقدار دقیق fitness
+			ranks = list(range(n, 0, -1))  # بهترین = n، بدترین = 1
+			total_rank = sum(ranks)
+			pick = random.uniform(0, total_rank)
+			current = 0
+			for i, (chromosome, _) in enumerate(ranked_population):
+			current += ranks[i]
+			if current > pick:
+			return chromosome
+		\end{lstlisting}
+	\end{ltrcode}
+	
+	\textbf{مزایا:}
+	\begin{itemize}
+		\item مستقل از مقیاس شایستگی
+		\item کنترل بهتر فشار انتخاب
+		\item جلوگیری از dominance زودرس
+	\end{itemize}
+	
+	\textbf{معایب:}
+	\begin{itemize}
+		\item از دست دادن اطلاعات دقیق شایستگی
+		\item محاسبات بیشتر برای رتبه‌بندی
+		\item ممکن است همگرایی کندتر باشد
+	\end{itemize}
+	
+	\section{مثال‌های کاربردی}
+	
+	\subsection{حل سیستم معادلات خطی}
+	
+	\begin{ltrcode}
+		\begin{lstlisting}[language=Python, caption=مثال سیستم خطی دو متغیر]
+			# سیستم معادلات:
+			# 2x + 3y = 7
+			# x - y = 1
+			
+			equations_text = [
+			"2*x + 3*y - 7",
+			"x - y - 1"
+			]
+			
+			\begin{ltrcode}
+				\begin{lstlisting}[language=Python, caption=مثال سیستم خطی دو متغیر]
+					# سیستم معادلات:
+					# 2x + 3y = 7
+					# x - y = 1
+					
+					equations_text = [
+					"2*x + 3*y - 7",
+					"x - y - 1"
+					]
+					
+					solver = EnhancedGeneticEquationSolver(
+					pop_size=300,
+					generations=1000,
+					mutation_rate=0.15
+					)
+					
+					result = solve_equations(equations_text, solver)
+					print(f"جواب: x = {result[0]}, y = {result[1]}")
+				\end{lstlisting}
+			\end{ltrcode}
+			
+			\subsection{حل سیستم معادلات غیرخطی}
+			
+			\begin{ltrcode}
+				\begin{lstlisting}[language=Python, caption=مثال سیستم غیرخطی]
+					# سیستم معادلات:
+					# x² + y² = 25
+					# x + y = 7
+					
+					equations_text = [
+					"x**2 + y**2 - 25",
+					"x + y - 7"
+					]
+					
+					solver = EnhancedGeneticEquationSolver(
+					pop_size=500,
+					generations=3000,
+					mutation_rate=0.2,
+					adaptive_mutation=True
+					)
+					
+					result = solve_equations(equations_text, solver)
+					print(f"جواب: x = {result[0]}, y = {result[1]}")
+				\end{lstlisting}
+			\end{ltrcode}
+			
+			\section{بهینه‌سازی پارامترها}
+			
+			\subsection{راهنمای تنظیم پارامترها}
+			
+			\subsubsection{اندازه جمعیت (\lr{Population Size})}
+			
+			\begin{itemize}
+				\item \textbf{مسائل ساده}: 100-300
+				\item \textbf{مسائل متوسط}: 300-500
+				\item \textbf{مسائل پیچیده}: 500-1000
+			\end{itemize}
+			
+			\subsubsection{نرخ جهش (\lr{Mutation Rate})}
+			
+			\begin{itemize}
+				\item \textbf{شروع}: 0.2-0.3 (اکتشاف بالا)
+				\item \textbf{میانه}: 0.1-0.2 (تعادل)
+				\item \textbf{پایان}: 0.05-0.1 (بهره‌برداری)
+			\end{itemize}
+			
+			\subsubsection{اندازه تورنمنت (\lr{Tournament Size})}
+			
+			\begin{itemize}
+				\item \textbf{کوچک} (2-3): تنوع بیشتر، همگرایی کندتر
+				\item \textbf{متوسط} (4-6): تعادل مناسب
+				\item \textbf{بزرگ} (7-10): همگرایی سریع، خطر optimum محلی
+			\end{itemize}
+			
+			\section{خطاهای رایج و راه‌حل‌ها}
+			
+			\subsection{همگرایی زودرس}
+			
+			\textbf{علائم:}
+			\begin{itemize}
+				\item توقف بهبود در نسل‌های اولیه
+				\item کاهش شدید تنوع جمعیت
+			\end{itemize}
+			
+			\textbf{راه‌حل‌ها:}
+			\begin{itemize}
+				\item افزایش اندازه جمعیت
+				\item کاهش اندازه تورنمنت
+				\item افزایش نرخ جهش
+				\item استفاده از restart mechanism
+			\end{itemize}
+			
+			\subsection{همگرایی کند}
+			
+			\textbf{علائم:}
+			\begin{itemize}
+				\item بهبود بسیار آهسته fitness
+				\item عدم رسیدن به جواب در تعداد نسل‌های تعیین شده
+			\end{itemize}
+			
+			\textbf{راه‌حل‌ها:}
+			\begin{itemize}
+				\item افزایش اندازه تورنمنت
+				\item کاهش نرخ جهش
+				\item بهبود تابع شایستگی
+				\item استفاده از elitism بیشتر
+			\end{itemize}
+			
+			\section{مطالعات موردی}
+			
+			\subsection{سیستم معادلات درجه دوم}
+			
+			\textbf{مسئله:}
+			\begin{align}
+				x^2 + y^2 &= 13 \\
+				x + y &= 5
+			\end{align}
+			
+			\textbf{تحلیل:}
+			\begin{itemize}
+				\item دو جواب دارد: (2,3) و (3,2)
+				\item نیاز به تنوع بالا برای یافتن هر دو جواب
+				\item تابع شایستگی مربعی مناسب است
+			\end{itemize}
+			
+			\textbf{پارامترهای بهینه:}
+			\begin{ltrcode}
+				\begin{lstlisting}[language=Python]
+					solver = EnhancedGeneticEquationSolver(
+					pop_size=400,
+					generations=2000,
+					mutation_rate=0.25,
+					tournament_size=4,
+					elite_size=40
+					)
+				\end{lstlisting}
+			\end{ltrcode}
+			
+			\subsection{سیستم معادلات با پارامترهای کسری}
+			
+			\textbf{مسئله:}
+			\begin{align}
+				\frac{1}{2}x + \frac{1}{3}y &= 1 \\
+				\frac{1}{4}x - \frac{1}{6}y &= 0
+			\end{align}
+			
+			\textbf{تحلیل:}
+			\begin{itemize}
+				\item جواب کسری دارد
+				\item نیاز به precision بالا
+				\item استفاده از fraction\_precision=True
+			\end{itemize}
+			
+			\textbf{پارامترهای بهینه:}
+			\begin{ltrcode}
+				\begin{lstlisting}[language=Python]
+					solver = EnhancedGeneticEquationSolver(
+					pop_size=300,
+					generations=1500,
+					mutation_rate=0.15,
+					fraction_precision=True,
+					adaptive_mutation=True
+					)
+				\end{lstlisting}
+			\end{ltrcode}
+			
+			\section{نتیجه‌گیری}
+			
+			\subsection{نقاط قوت سیستم}
+			
+			\begin{enumerate}
+				\item \textbf{انعطاف‌پذیری}: قابلیت حل انواع مختلف معادلات
+				\item \textbf{مقاومت}: عدم گیر کردن در optimum محلی
+				\item \textbf{دقت}: یافتن جواب‌های بسیار دقیق
+				\item \textbf{سازگاری}: تطبیق خودکار با انواع مسائل
+				\item \textbf{کارایی}: استفاده از تکنیک‌های بهینه‌سازی
+			\end{enumerate}
+			
+			\subsection{محدودیت‌ها}
+			
+			\begin{enumerate}
+				\item \textbf{زمان محاسبه}: نیاز به زمان بیشتر نسبت به روش‌های مستقیم
+				\item \textbf{تنظیم پارامتر}: نیاز به دانش برای تنظیم بهینه
+				\item \textbf{تضمین همگرایی}: عدم تضمین یافتن جواب در زمان محدود
+				\item \textbf{پیچیدگی}: درک و debug کردن سخت‌تر از روش‌های کلاسیک
+			\end{enumerate}
+			
+			\subsection{پیشنهادات برای توسعه آینده}
+			
+			\begin{enumerate}
+				\item \textbf{Parallel Processing}: موازی‌سازی محاسبات
+				\item \textbf{Hybrid Methods}: ترکیب با روش‌های عددی کلاسیک
+				\item \textbf{Machine Learning}: یادگیری خودکار پارامترها
+				\item \textbf{Multi-Objective}: حل همزمان چندین هدف
+				\item \textbf{Constraint Handling}: مدیریت بهتر محدودیت‌ها
+			\end{enumerate}
+			
+			\section{منابع و مراجع}
+			
+			\begin{enumerate}
+				\item Goldberg, D. E. (1989). Genetic Algorithms in Search, Optimization, and Machine Learning
+				\item Holland, J. H. (1992). Adaptation in Natural and Artificial Systems
+				\item Michalewicz, Z. (1996). Genetic Algorithms + Data Structures = Evolution Programs
+				\item Coello, C. A. C. (2002). Theoretical and numerical constraint-handling techniques
+				\item Deb, K. (2001). Multi-Objective Optimization using Evolutionary Algorithms
+			\end{enumerate}
+			
+			\section{ضمائم}
+			
+			\subsection{ضمیمه الف: کد کامل کلاس اصلی}
+			
+			\begin{ltrcode}
+				\begin{lstlisting}[language=Python, caption=کلاس کامل EnhancedGeneticEquationSolver]
+					import random
+					import math
+					from fractions import Fraction
+					
+					class EnhancedGeneticEquationSolver:
+					def __init__(self, pop_size=500, generations=5000, mutation_rate=0.2, 
+					elite_size=50, var_range=(-100, 100), tournament_size=5,
+					stagnation_limit=200, adaptive_mutation=True,
+					fraction_precision=True):
+					
+					self.pop_size = pop_size
+					self.generations = generations
+					self.base_mutation_rate = mutation_rate
+					self.current_mutation_rate = mutation_rate
+					self.elite_size = elite_size
+					self.var_range = var_range
+					self.tournament_size = tournament_size
+					self.stagnation_limit = stagnation_limit
+					self.adaptive_mutation = adaptive_mutation
+					self.fraction_precision = fraction_precision
+					
+					# آمارها
+					self.generation_stats = []
+					self.best_fitness_history = []
+					self.restart_count = 0
+					
+					def fitness_function(self, chromosome, equations):
+					total_error = 0
+					for eq in equations:
+					try:
+					result = eq(*chromosome)
+					total_error += result**2
+					except:
+					total_error += 1e6
+					
+					if total_error < 1e-15:
+					return float('inf')
+					
+					return 1.0 / total_error
+					
+					def initialize_population(self, var_count):
+					population = []
+					for _ in range(self.pop_size):
+					chromosome = []
+					for _ in range(var_count):
+					strategy = random.choice(['integer', 'small', 'fraction', 'decimal'])
+					
+					if strategy == 'integer':
+					value = random.randint(-10, 10)
+					elif strategy == 'small':
+					value = random.uniform(-2, 2)
+					elif strategy == 'fraction':
+					value = random.choice([0.5, 0.25, 0.75, 1.5, 2.5, -0.5, -0.25])
+					else:  # decimal
+					value = random.uniform(self.var_range[0], self.var_range[1])
+					
+					chromosome.append(value)
+					population.append(chromosome)
+					return population
+					
+					def evaluate_population(self, population, equations):
+					evaluated = []
+					for chromosome in population:
+					fitness = self.fitness_function(chromosome, equations)
+					evaluated.append((chromosome, fitness))
+					return sorted(evaluated, key=lambda x: x[1], reverse=True)
+					
+					def selection(self, ranked_population):
+					tournament = random.sample(ranked_population, self.tournament_size)
+					if random.random() < 0.9:
+					return max(tournament, key=lambda x: x[1])[0]
+					else:
+					sorted_tournament = sorted(tournament, key=lambda x: x[1], reverse=True)
+					return sorted_tournament[1][0] if len(sorted_tournament) > 1 else sorted_tournament[0][0]
+					
+					def crossover(self, parent1, parent2):
+					strategy = random.choice(['uniform', 'arithmetic', 'single_point'])
+					
+					if strategy == 'uniform':
+					child = [p1 if random.random() < 0.5 else p2 for p1, p2 in zip(parent1, parent2)]
+					elif strategy == 'arithmetic':
+					alpha = random.random()
+					child = [alpha * p1 + (1 - alpha) * p2 for p1, p2 in zip(parent1, parent2)]
+					else:  # single_point
+					point = random.randint(1, len(parent1) - 1)
+					child = parent1[:point] + parent2[point:]
+					
+					return child
+					
+					def mutation(self, chromosome, generation, max_generations):
+					if random.random() > self.current_mutation_rate:
+					return chromosome
+					
+					mutated = chromosome.copy()
+					gene_index = random.randint(0, len(mutated) - 1)
+					
+					strategy = random.choices(
+					['random', 'small_change', 'fraction', 'zero', 'sign_flip'],
+					weights=[0.3, 0.4, 0.2, 0.05, 0.05],
+					k=1
+					)[0]
+					
+					if strategy == 'random':
+					mutated[gene_index] = random.uniform(self.var_range[0], self.var_range[1])
+					elif strategy == 'small_change':
+					change = random.gauss(0, 0.1)
+					mutated[gene_index] += change
+					elif strategy == 'fraction':
+					mutated[gene_index] = random.choice([0.5, 0.25, 0.75, 1.0, 2.0, -0.5, -1.0])
+					elif strategy == 'zero':
+					mutated[gene_index] = random.uniform(-0.1, 0.1)
+					elif strategy == 'sign_flip':
+					mutated[gene_index] = -mutated[gene_index]
+					
+					# Update mutation rate
+					if self.adaptive_mutation:
+					progress = min(1.0, generation / (max_generations * 0.7))
+					self.current_mutation_rate = self.base_mutation_rate * (1.0 - 0.6 * progress)
+					
+					return mutated
+					
+					def solve(self, equations, max_time=300):
+					var_count = len(equations)
+					population = self.initialize_population(var_count)
+					
+					best_solution = None
+					best_fitness = 0
+					stagnation_counter = 0
+					
+					for generation in range(self.generations):
+					# Evaluate population
+					ranked_population = self.evaluate_population(population, equations)
+					current_best_fitness = ranked_population[0][1]
+					
+					# Check for improvement
+					if current_best_fitness > best_fitness:
+					best_fitness = current_best_fitness
+					best_solution = ranked_population[0][0].copy()
+					stagnation_counter = 0
+					else:
+					stagnation_counter += 1
+					
+					# Check termination conditions
+					if best_fitness > 1e10:  # Found exact solution
+					break
+					
+					if stagnation_counter >= self.stagnation_limit:
+					# Restart with new population
+					population = self.initialize_population(var_count)
+					self.restart_count += 1
+					stagnation_counter = 0
+					continue
+					
+					# Create next generation
+					new_population = []
+					
+					# Elitism
+					for i in range(self.elite_size):
+					new_population.append(ranked_population[i][0])
+					
+					# Generate offspring
+					while len(new_population) < self.pop_size:
+					parent1 = self.selection(ranked_population)
+					parent2 = self.selection(ranked_population)
+					child = self.crossover(parent1, parent2)
+					child = self.mutation(child, generation, self.generations)
+					new_population.append(child)
+					
+					population = new_population
+					
+					return best_solution, best_fitness
+				\end{lstlisting}
+			\end{ltrcode}
+			
+			\subsection{ضمیمه ب: مثال‌های تست}
+			
+			\begin{ltrcode}
+				\begin{lstlisting}[language=Python, caption=توابع تست مختلف]
+					def test_linear_2var():
+					equations = [
+					"2*x + 3*y - 7",
+					"x - y - 1"
+					]
+					return equations
+					
+					def test_nonlinear_2var():
+					equations = [
+					"x**2 + y**2 - 25",
+					"x + y - 7"
+					]
+					return equations
+					
+					def test_complex_3var():
+					equations = [
+					"x + y + z - 6",
+					"2*x - y + z - 1", 
+					"x + 2*y - z - 2"
+					]
+					return equations
+					
+					def solve_equations(equation_strings, solver):
+					# Parse equations
+					equations = []
+					for eq_str in equation_strings:
+					# Convert to lambda function
+					variables = ['x', 'y', 'z', 'w'][:len(equation_strings)]
+					eq_lambda = eval(f"lambda {', '.join(variables)}: {eq_str}")
+					equations.append(eq_lambda)
+					
+					# Solve
+					solution, fitness = solver.solve(equations)
+					
+					return solution
+				\end{lstlisting}
+			\end{ltrcode}
+			
+			\subsection{ضمیمه ج: جدول پارامترهای بهینه}
+			
+			\begin{center}
+				\begin{longtable}{|p{3cm}|p{2cm}|p{2cm}|p{2cm}|p{3cm}|}
+					\hline
+					\textbf{نوع مسئله} & \textbf{اندازه جمعیت} & \textbf{نرخ جهش} & \textbf{تعداد نسل} & \textbf{اندازه تورنمنت} \\
+					\hline
+					\endfirsthead
+					
+					\hline
+					\textbf{نوع مسئله} & \textbf{اندازه جمعیت} & \textbf{نرخ جهش} & \textbf{تعداد نسل} & \textbf{اندازه تورنمنت} \\
+					\hline
+					\endhead
+					
+					\hline
+					\multicolumn{5}{r}{\textit{ادامه در صفحه بعد...}} \\
+					\endfoot
+					
+					\hline
+					\endlastfoot
+					
+					خطی ساده & 200-300 & 0.15-0.2 & 500-1000 & 3-4 \\
+					\hline
+					خطی پیچیده & 300-500 & 0.2-0.25 & 1000-2000 & 4-5 \\
+					\hline
+					غیرخطی ساده & 400-600 & 0.2-0.3 & 1500-3000 & 4-6 \\
+					\hline
+					غیرخطی پیچیده & 500-800 & 0.25-0.35 & 3000-5000 & 5-7 \\
+					\hline
+					کسری & 300-500 & 0.15-0.2 & 1000-2000 & 3-5 \\
+					\hline
+				\end{longtable}
+			\end{center}
+			
+		\end{document}
