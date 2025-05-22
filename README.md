@@ -26,6 +26,9 @@ This document provides a detailed mathematical explanation of the Enhanced Genet
     - [Three-Variable System](#three-variable-system)
     - [Four-Variable System](#four-variable-system)
 
+---
+ Author: [MohammadMahdiSharifbeigy][(sharifbeigymohammad@gmail.com)](https://github.com/MohammadMahdi-Sharifbeigy)
+
 ## Introduction
 
 The Enhanced Genetic Equation Solver uses a genetic algorithm approach to solve systems of equations of the form:
